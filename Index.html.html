@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#25216f">
+<title>Colorímetro de Brackets</title>
+<style>
+:root{--navy:#25216f;--blue:#244c9a;--ink:#202438;--muted:#697087;--bg:#f5f6fb;--line:#e5e7ef;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:24px 16px 40px}
+header{background:linear-gradient(135deg,#25216f,#344c9d);color:white;border-radius:24px;padding:25px 22px;margin-bottom:18px;box-shadow:0 12px 28px #25216f22}
+.brand{font-size:12px;letter-spacing:.16em;font-weight:800;opacity:.8}
+h1{font-size:clamp(25px,5vw,36px);line-height:1.08;margin:10px 0 8px}
+header p{margin:0;color:#e6e8ff;font-size:14px}
+.panel{background:white;border:1px solid var(--line);border-radius:20px;padding:20px;margin:14px 0;box-shadow:0 5px 18px #18204a08}
+h2{font-size:17px;margin:0 0 7px}
+.sub{font-size:13px;color:var(--muted);margin:0 0 16px}
+label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}
+input{width:100%;border:1px solid #d9ddea;border-radius:12px;padding:13px 14px;font:inherit;font-size:15px;outline:none}
+input:focus{border-color:#5866b6;box-shadow:0 0 0 3px #5866b622}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.color{border:1px solid var(--line);background:#fff;border-radius:13px;padding:9px 7px;cursor:pointer;text-align:center;min-width:0;transition:.15s}
+.color:hover{transform:translateY(-1px);border-color:#aab1d0}
+.color[aria-pressed="true"]{border:2px solid var(--navy);padding:8px 6px;background:#f4f3ff;box-shadow:0 0 0 2px #25216f12}
+.swatch{height:35px;border-radius:8px;border:1px solid #00000020;margin-bottom:7px}
+.color-name{font-size:12px;font-weight:650;line-height:1.2;display:block;overflow-wrap:anywhere}
+.check{font-size:10px;color:var(--navy);font-weight:800;min-height:13px;margin-top:4px}
+.selected{display:flex;align-items:center;gap:12px;background:#f7f8fc;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:16px}
+.selected .swatch{width:42px;height:42px;flex:0 0 42px;margin:0}
+.selected small{display:block;color:var(--muted);font-size:11px}
+.selected strong{font-size:16px}
+button{width:100%;border:0;border-radius:13px;padding:15px 18px;background:#16864b;color:white;font-size:15px;font-weight:800;cursor:pointer;margin-top:16px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.note{font-size:12px;color:var(--muted);line-height:1.5;margin:12px 2px 0}
+footer{text-align:center;color:#858ba0;font-size:11px;padding:12px}
+@media(min-width:560px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.wrap{padding-top:32px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header>
+  <div class="brand">AO · SELECTOR DIGITAL</div>
+  <h1>Colorímetro de Brackets</h1>
+  <p>Elige el color de tus ligas y confirma tu selección.</p>
+</header>
+
+<section class="panel">
+  <h2>1. Datos del paciente</h2>
+  <p class="sub">Escribe tu nombre para identificar tu elección.</p>
+  <label for="patient">Nombre del paciente</label>
+  <input id="patient" type="text" maxlength="70" autocomplete="name" placeholder="Ej. Juan Pérez">
+</section>
+
+<section class="panel">
+  <h2>2. Elige tu color</h2>
+  <p class="sub">Toca una muestra para seleccionarla. Los tonos en pantalla son orientativos.</p>
+  <div class="grid" id="colors"></div>
+  <div class="selected" aria-live="polite">
+    <div class="swatch" id="selectedSwatch" style="background:#0645b8"></div>
+    <div><small>COLOR SELECCIONADO</small><strong id="selectedName">Azul Rey</strong></div>
+  </div>
+  <button id="send">Confirmar y enviar por WhatsApp</button>
+  <p class="note">Al tocar el botón se abrirá WhatsApp con tu elección escrita. Para completar el envío, solo pulsa «Enviar» en WhatsApp.</p>
+</section>
+<footer>Selector digital de colores · American Orthodontics</footer>
+</main>
+<script>
+const whatsappNumber = "527711508457";
+const colors = [
+  ["Transparente","#f4f4ee"],["Blanco","#ffffff"],["Perla","#c7ceca"],
+  ["Dorado","#b9a000"],["Plateado","#a9b4b8"],["Gris","#555b5d"],
+  ["Negro","#080808"],["Vino","#39000b"],["Rojo","#a5000b"],
+  ["Rojo Fuego","#c90000"],["Naranja Oscuro","#df3b08"],["Naranja","#f47b00"],
+  ["Amarillo","#e5d900"],["Lima","#79bf32"],["Verde Trébol","#008348"],
+  ["Verde","#00664a"],["Aqua","#00a99d"],["Turquesa","#008b99"],
+  ["Azul Claro","#65b6e2"],["Azul Rey","#0645b8"],["Azul Marino","#10154e"],
+  ["Rosa","#b00050"],["Rosa Intenso","#df1682"],["Coral","#e33a20"],
+  ["Lila","#963b9c"],["Morado","#351080"],["Lavanda","#8272c5"]
+];
+let selected = 19;
+const grid = document.getElementById("colors");
+const nameOut = document.getElementById("selectedName");
+const swatchOut = document.getElementById("selectedSwatch");
+
+function choose(index){
+  selected=index;
+  nameOut.textContent=colors[index][0];
+  swatchOut.style.background=colors[index][1];
+  [...grid.children].forEach((el,i)=>{
+    el.setAttribute("aria-pressed",String(i===index));
+    el.querySelector(".check").textContent=i===index?"✓ Seleccionado":"";
+  });
+}
+colors.forEach(([name,hex],i)=>{
+  const b=document.createElement("button");
+  b.type="button"; b.className="color"; b.setAttribute("aria-pressed","false");
+  b.innerHTML=`<div class="swatch" style="background:${hex}"></div><span class="color-name">${name}</span><div class="check"></div>`;
+  b.addEventListener("click",()=>choose(i));
+  grid.appendChild(b);
+});
+choose(selected);
+document.getElementById("send").addEventListener("click",()=>{
+  const patient=document.getElementById("patient").value.trim();
+  if(!patient){document.getElementById("patient").focus();alert("Escribe el nombre del paciente para continuar.");return;}
+  const message=`Hola, te comparto mi elección de color de brackets.%0A%0APaciente: ${encodeURIComponent(patient)}%0AColor elegido: ${encodeURIComponent(colors[selected][0])}`;
+  const url=`https://wa.me/${whatsappNumber}?text=${message}`;
+  window.open(url,"_blank","noopener");
+});
+</script>
+</body>
+</html>
